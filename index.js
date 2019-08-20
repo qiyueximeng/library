@@ -1,5 +1,4 @@
 import { cloneJSON, cloneRecursion } from './function';
-// import { getRawType } from './check';
 import getRawType from './check';
 
 const a = {

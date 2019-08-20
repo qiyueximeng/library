@@ -1,26 +1,4 @@
-import { isDef, checkedType } from './check';
-import { isString } from './check';
-
-/**
- * 解析查询字符串
- * 将查询字符串解析为对象
- * @export
- * @param { string } [queryStr=location.search] - 需要解析的字符串，若不传则默认取浏览器查询字符串
- * @returns { Object } - 解析后的对象
- */
-export function parseQuery(queryStr = location.search) {
-    if(!isString(queryStr)) throw TypeError('The param "queryString" should be a string!');
-
-    if(queryStr.charAt(0) === '?') queryStr = queryStr.slice(1);
-    var queryObj = {};
-    queryStr
-        .split('&')
-        .forEach(item => {
-            var itemArr = item.split('=');
-            queryObj[itemArr[0]] = itemArr[1];
-        });
-    return queryObj;
-}
+import { isDef, checkType } from './check'
 
 /**
  * 防抖
@@ -32,25 +10,21 @@ export function parseQuery(queryStr = location.search) {
  * @version v1.0 个人版
  */
 export function debounce(callback, delay, immediate) {
-    if(typeof delay !== 'number' || Number.isNaN(delay)) throw new TypeError('The param "delay" should be a number!');
-    var timer;
+    if(typeof delay !== 'number' || Number.isNaN(delay)) throw new TypeError('The param "delay" should be a number!')
+
+    let timer
     return function() {
-        var that = this;
-        var args = arguments;
-        if(timer) clearTimeout(timer);
+        const args = arguments
+        if(timer) clearTimeout(timer)
         if(immediate) {
-            var callNow = !timer;
-            timer = setTimeout(function() {
-                timer = null;
-            }, delay);
-            if(callNow) callback.apply(that, args);
+            const callNow = !timer
+            timer = setTimeout(() => { timer = null }, delay)
+            if(callNow) callback.apply(this, args)
         } else {
-            timer = setTimeout(function() {
-                callback.apply(that, args);
-            }, delay);
+            timer = setTimeout(() => { callback.apply(this, args) }, delay)
         }
     }
-};
+}
 
 /**
  * 节流
@@ -61,15 +35,15 @@ export function debounce(callback, delay, immediate) {
  * @version v1.0 个人版
  */
 export function throttle(callback, delay) {
-    var prevTime = 0;
+    let prevTime = 0
     return function() {
-        var now = Date.now();
+        const now = Date.now()
         if(now - prevTime > delay) {
-            callback.apply(this, arguments);
-            prevTime = now;
+            callback.apply(this, arguments)
+            prevTime = now
         }
     }
-};
+}
 
 /**
  * 确保指定函数只会被调用一次
@@ -78,36 +52,35 @@ export function throttle(callback, delay) {
  * @export
  */
 export function once(fn) {
-    let called = false;
+    let called = false
     
     return function() {
-        if(called) return void 0;
-        fn.apply(this, arguments);
+        if(called) return void 0
+        fn.apply(this, arguments)
+        called = true
     }
 }
 
 /**
  * 普通深拷贝
  * 仅兼容普通对象，通过递归实现
- * @export
  * @param {*} target
  * @returns
  */
 export function cloneRecursion(target) {
-    if(!(checkedType(target, 'Object'))) {
-        return target;
-    }
-    let result = {};
+    if(!(checkType(target, 'Object'))) return target
+
+    let result = {}
     for(let key in target) {
         if(target.hasOwnProperty(key)) {
-            if(checkedType(target[key], 'Object')) {
-                result[key] = cloneRecursion(target[key]);
+            if(checkType(target[key], 'Object')) {
+                result[key] = cloneRecursion(target[key])
             } else {
-                result[key] = target[key];
+                result[key] = target[key]
             }
         }
     }
-    return result;
+    return result
 }
 
 /**
@@ -119,59 +92,71 @@ export function cloneRecursion(target) {
  * @returns { any } - 拷贝结果
  */
 export function cloneJSON(target, defaultVal) {
-    if(!checkedType(target, 'Object') && !checkedType(target, 'Array')) {
-        return target;
-    }
-    let result;
+    if(!checkType(target, 'Object') && !checkType(target, 'Array')) return target
+
+    let result
     try {
-        result = JSON.parse(JSON.stringify(target));
+        result = JSON.parse(JSON.stringify(target))
     } catch(err) {
-        if(isDef(defaultVal)) {
-            result = defaultVal
-        } else {
-            throw err;
-        }
+        if(!isDef(defaultVal)) throw err
+        result = defaultVal
     }
-    return result;
+    return result
 }
 
 /**
  * 倒计时函数
  *
- * @export
  * @param {*} calcTime
  * @param {*} callBack
- * @returns
  */
 export function countDown(calcTime, callBack) {
-    if(calcTime < 0) return;
-    callBack(calcTime--);
-    setTimeout(() => {
-        countDown(calcTime, callBack);
-    }, 1000);
+    if(calcTime < 0) return
+    callBack(calcTime--)
+    setTimeout(() => { countDown(calcTime, callBack) }, 1000)
 }
 
-export function removeItem(list) {
-
-}
-
-export function shallowClone(obj) {
-
-};
-
-export function deepClone(obj) {
-
-};
-
+// 创建指定深度和广度的对象数（用于测试）
 export function createData(deep, breadth) {
-    var data = {};
-    var temp = data;
+    let data = {}
+    let temp = data
     
-    for(var i = 0; i < deep; i++) {
-        temp = temp['data'] = {};
+    for(let i = 0; i < deep; i++) {
+        temp = temp['data'] = {}
         for(var j = 0; j < breadth; j++) {
-            temp[j] = j;
+            temp[j] = j
         }
     }
-    return data;
-};
+    return data
+}
+
+/**
+ * rgba 颜色转十六进制颜色
+ * @param { string } color - rgba 颜色字符串
+ */
+export function hexify(color) {
+    let values = color
+        .replace(/rgba?\(/, '')
+        .replace(/\)/, '')
+        .replace(/[\s+]/g, '')
+        .split(',')
+    let a = parseFloat(values[3] || 1),
+        r = Math.floor(a * parseInt(values[0]) + (1 - a) * 255),
+        g = Math.floor(a * parseInt(values[1]) + (1 - a) * 255),
+        b = Math.floor(a * parseInt(values[2]) + (1 - a) * 255)
+    return "#" +
+        ("0" + r.toString(16)).slice(-2) +
+        ("0" + g.toString(16)).slice(-2) +
+        ("0" + b.toString(16)).slice(-2)
+}
+
+// XSS过滤
+export function filterXSS(str) {
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\r{0,}\n/g, '<br/>')
+}
