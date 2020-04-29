@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>test capture</title>
+  <style>
+    body { margin: 0; }
+    #app { width: 750px; height: 1334px; }
+  </style>
+  <script src="./three.min.js"></script>
+  <script src="./capture.js"></script>
+</head>
+<body>
+  <div id="app"></div>
+
+<script>
+  const app = document.getElementById('app')
+  let framerate = 30
+  let nums = framerate * 10, frameNum = 0, isCapturing = false
+  const capturer = new Capture({
+    framerate: framerate,
+    verbose: true
+  })
+  capturer.start()
+  isCapturing = true
+  let camera, cameraTarget, scene, renderer
+  let startTime = Date.now()
+  let then = Date.now() * 0.001
+
+  function draw() {
+    // CAMERA
+    camera = new THREE.PerspectiveCamera( 30, 1, 1, 1500 );
+    camera.position.set( 0, 400, 700 );
+    cameraTarget = new THREE.Vector3( 0, 150, 0 );
+    scene = createCubeScene( false );
+
+    // RENDERER
+    renderer = new THREE.WebGLRenderer( { antialias: true } );
+    app.appendChild( renderer.domElement );
+    renderer.setSize( 1280, 720, false );
+    animate()
+  }
+
+  function animate() {
+    render()
+    requestAnimationFrame(animate)
+  }
+
+  // 创建场景和图形
+  function createCubeScene( wireframe ) {
+    // SCENE
+    var scene = new THREE.Scene();
+    scene.fog = new THREE.Fog( 0x000000, 250, 1400 );
+
+    // LIGHTS
+    var dirLight = new THREE.DirectionalLight( 0xffffff, 0.725 );
+    dirLight.position.set( 200, 100, 100 ).normalize();
+    scene.add( dirLight );
+
+    var pointLight = new THREE.HemisphereLight( 0xddeeff, 0x806040, 0.5 );
+    pointLight.position.set( -120, 0, 50 );
+    scene.add( pointLight );
+
+    var group = new THREE.Group();
+    group.position.y = 120;
+
+    var size = 50;
+    var spread = size * 2.5;
+    var geometry = new THREE.BoxGeometry( size, size, size );
+
+    var materials = [];
+    var num = 4;
+    for ( var xx = -num; xx <= num; ++xx ) {
+    for ( var yy = -num; yy <= num; ++yy ) {
+        for ( var zz = -num; zz <= num; ++zz ) {
+        var color = ( (( (xx / num * 0.5 + 0.5 ) * 255 ) | 0 ) <<  0 ) |
+                ( (( (yy / num * 0.5 + 0.5 ) * 255 ) | 0 ) <<  8 ) |
+                ( (( (zz / num * 0.5 + 0.5 ) * 255 ) | 0 ) << 16 ) ;
+        var mat = new THREE.MeshLambertMaterial( { color: color, shading: THREE.FlatShading, wireframe: wireframe } );
+        var model = new THREE.Mesh( geometry, mat );
+        materials.push( mat );
+        model.position.x = xx * spread;
+        model.position.y = yy * spread;
+        model.position.z = zz * spread;
+        group.add( model );
+        }
+    }
+    }
+
+    scene.add( group );
+
+    return {
+      resize: function() {
+        var lineWidth = Math.max(1, renderer.domElement.clientHeight / 30);
+        materials.forEach( function( mat ) {
+          mat.wireframeLinewidth = lineWidth;
+        });
+      },
+      update: function(deltaTime) {
+        group.rotation.z += deltaTime * 0.2;
+        group.rotation.y += deltaTime * 0.11;
+      },
+      getScene: () => scene,
+      getCamera: function( renderer ) {
+          camera.aspect = renderer.domElement.clientWidth / renderer.domElement.clientHeight;
+          camera.updateProjectionMatrix();
+          camera.lookAt( cameraTarget );
+          return camera;
+        }
+    };
+  }
+
+  // 渲染函数，控制渲染逻辑以及录制逻辑
+  function render() {
+    var now = Date.now() * 0.001;
+    var deltaTime = now - then;
+    then = now;
+
+    scene.update(deltaTime);
+    var renderScene = scene.getScene();
+
+    if(renderScene.fog) renderer.setClearColor(renderScene.fog.color)
+
+    var cam = scene.getCamera(renderer)
+
+    renderer.render(renderScene, cam);
+
+    if (isCapturing) capturer.add(renderer.domElement)
+
+    frameNum++
+    if(frameNum >= nums && isCapturing) {
+      isCapturing = false
+      console.log(Date.now() - startTime)
+      capturer.end(imgs => {
+        console.log(imgs)
+      })
+    }
+  }
+
+  draw()
+</script>
+</body>
+</html>

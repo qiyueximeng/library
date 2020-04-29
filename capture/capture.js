@@ -1,8 +1,11 @@
-const _runTime = performance.timing.navigationStart;
+const _runTime = performance.timing.navigationStart
 function Capture(setting) {
-  setting.framerate || 60;
-  setting.verbose || false;
-  setting.startTime || 0;
+  setting = {
+    framerate: 60,
+    verbose: false,
+    startTime: 0,
+    ...setting
+  }
 
   const _setTimeout = setTimeout,
     _clearTimeout = clearTimeout,

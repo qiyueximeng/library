@@ -20,20 +20,30 @@ const capturer = new Capture({
 });
 ```
 
-## 配置参数
+## 参数
 
-- framerate: 截图目标帧率
-- verbose: 是否打印执行信息
+### `framerate`
 
-## 实例方法
+指定截图帧率
 
-- start: 开启捕获器监听
-- add: 
-  - 添加一张捕获图片
-  - 参数:
-    - canvas: 需要捕获的 canvas dom 元素
-- end:
-  - 捕获结束
-  - 参数:
-    - callback: 捕获结束处理完成后的回调函数
-    - imgs: 回调函数接收参数，已捕获图片列表
+### `verbose`
+
+是否打印执行信息
+
+
+## 方法
+
+### `capture.start()`
+
+开启捕获器监听
+
+### `capture.add(canvas)`
+- `canvas` Element - 需要捕获的 canvas dom 元素
+
+添加一张捕获图片
+
+### `capture.end(callback)`
+- `callback` Function - 捕获结束处理完成后的回调函数
+  - `imgs` string[] - 已捕获图片列表
+
+结束捕获
