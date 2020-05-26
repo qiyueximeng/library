@@ -68,17 +68,12 @@ export function once(fn) {
  * @returns
  */
 export function cloneRecursion(target) {
-    if(!(checkType(target, 'Object'))) return target
+    if (!(checkType(target, 'Object'))) return target
 
     let result = {}
-    for(let key in target) {
-        if(target.hasOwnProperty(key)) {
-            if(checkType(target[key], 'Object')) {
-                result[key] = cloneRecursion(target[key])
-            } else {
-                result[key] = target[key]
-            }
-        }
+    for (let key in target) {
+        if (!target.hasOwnProperty(key)) continue
+        result[key] = checkType(target[key], 'Object') ? cloneRecursion(target[key]) : target[key]
     }
     return result
 }
